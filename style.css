@@ -1,0 +1,19 @@
+#success-message {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #198754;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    align-items: center;
+    gap: 10px;
+}
+
+#success-icon {
+    font-size: 18px;
+}
