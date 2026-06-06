@@ -15,6 +15,15 @@ const storyError = document.getElementById("storyError");
 const container = document.getElementById("contenu")
 const userCardContainer = document.getElementById("userCardContainer");
 
+function getForm() {
+  const data = localStorage.getItem('form');
+  return data ? JSON.parse(data) : [];
+}
+
+// Sauvegarder les idées
+function saveForm(content) {
+  localStorage.setItem('form', JSON.stringify(content));
+}
 
 // validation nom
 function validateFullname() {
@@ -147,6 +156,18 @@ function updateCounter() {
         `${remaining} caractères restants`;
 
 }
+
+// Mettre à jour le champ description
+function ResetCounter() {
+
+    const remaining = 255;
+
+    counter.textContent =
+        `${remaining} caractères restants`;
+
+}
+
+
 story.addEventListener("input", updateCounter);
 // Pour controller le nombre de caratère saisie et si le formulaire est vide
 
@@ -173,26 +194,9 @@ function validateStory() {
 
     return true;
 }
-// cette fonction affiche et récupère les données dans la carte
-function displayUserCard() {
-
-    const interests = [];
-
-    for (const checkbox of checkboxes) {
-        if (checkbox.checked) {
-            interests.push(checkbox.value);
-        }
-    }
-
-    let chronotype = "";
-
-    for (const radio of radios) {
-        if (radio.checked) {
-            chronotype = radio.nextElementSibling.textContent;
-        }
-    }
-
-    userCardContainer.innerHTML = `
+// cette fonction affiche les carte
+function displayUserCard(content) {
+    return `
         <div class="card shadow-lg border-0">
             <div class="card-header bg-primary text-white">
                 <h3 class="mb-0">
@@ -202,22 +206,22 @@ function displayUserCard() {
             <div class="card-body">
 
                 <h4 class="card-title mb-4">
-                    ${fullname.value}
+                    ${content.fullname}
                 </h4>
 
                 <p>
                     <strong>📧 Email :</strong>
-                    ${email.value}
+                    ${content.email}
                 </p>
 
                 <p>
                     <strong>💻 Domaine :</strong>
-                    ${domain.options[domain.selectedIndex].text}
+                    ${content.domaine}
                 </p>
 
                 <p>
                     <strong>⏰ Chronotype :</strong>
-                    ${chronotype}
+                    ${content.chronotype}
                 </p>
 
                 <p>
@@ -225,9 +229,9 @@ function displayUserCard() {
                 </p>
 
                 <div class="mb-3">
-                    ${interests.map(interest =>
+                    ${content.interet.map(interest =>
                         `<span class="badge bg-primary me-2">${interest}</span>`
-                    )}
+                    ).join("")}
                 </div>
 
                 <hr>
@@ -235,13 +239,27 @@ function displayUserCard() {
                 <h5>🚀 Présentation</h5>
 
                 <p class="text-muted">
-                    ${story.value}
+                    ${content.story}
                 </p>
 
             </div>
         </div>
     `;
 }
+// récupère les éléments dans le local storage
+function getContentForm() {
+    const content = getForm();
+
+    userCardContainer.innerHTML = ''; 
+
+    content.forEach(user => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+        col.innerHTML = displayUserCard(user);
+        userCardContainer.appendChild(col);
+    });
+}
+
 
 fullname.addEventListener("blur", validateFullname);
 email.addEventListener("blur", validateEmail);
@@ -252,21 +270,56 @@ form.addEventListener("submit", function(event){
 
     event.preventDefault();
 
-    const isFullnameValid = validateFullname();
-    const isEmailValid = validateEmail();
-    const isDomainValid = validateDomain();
-    const isRadioValid = validateRadio();
-    const isCheckboxesValid = validateCheckboxes();
-    const isStoryValid = validateStory();
+    let isFullnameValid = validateFullname();
+    let isEmailValid = validateEmail();
+    let isDomainValid = validateDomain();
+    let isRadioValid = validateRadio();
+    let isCheckboxesValid = validateCheckboxes();
+    let isStoryValid = validateStory();
     if (isFullnameValid && isEmailValid && isDomainValid && isRadioValid &&
         isCheckboxesValid && isStoryValid) {
-        displayUserCard()
+
+        const interests = [];
+
+        for (const checkbox of checkboxes) {
+            if (checkbox.checked) {
+                interests.push(checkbox.value);
+            }
+        }
+
+        let chronotype = "";
+
+        for (const radio of radios) {
+            if (radio.checked) {
+                chronotype = radio.nextElementSibling.textContent;
+            }
+        }
+
+        const content = getForm()
+
+        const saisie = {
+            fullname : fullname.value,
+            email : email.value,
+            domaine : domain.options[domain.selectedIndex].text,
+            chronotype : chronotype,
+            interet : interests,
+            story : story.value
+        }
+        content.push(saisie)
+        saveForm(content)
+
         const msg = document.getElementById("success-message");
         msg.style.display = "flex";
 
         setTimeout(() => {
             msg.style.display = "none";
         }, 3000);
-        form.reset();
     }
+    form.reset();
+    ResetCounter()
+
+    form.querySelectorAll(".is-valid, .is-invalid").forEach(el => {
+        el.classList.remove("is-valid", "is-invalid");
+    })
 });
+getContentForm()
